@@ -7,13 +7,13 @@ class MY_Controller extends CI_Controller {
 	function __construct()
 	{
 		parent::__construct();
-		$this->load->helper('url');
-		$this->_init_syslog_msg();
-		$this->_create_syslog_msg();
+		//$this->_init_syslog_msg();
+		//$this->_create_syslog_msg();
 	}
 
 	private function _init_syslog_msg()
 	{
+		$this->load->helper('url');
 		//load config
 		$this->config->load('syslog');
 		//set variable
@@ -32,7 +32,8 @@ class MY_Controller extends CI_Controller {
 				$url = '/';
 			}
 		       	$this->syslog_msg['Request.url'] = $url;
-			$this->syslog_msg['Request.status'] = 200;
+		       	$this->syslog_msg['Request.method'] = $_SERVER['REQUEST_METHOD'];
+			$this->syslog_msg['Request.ip'] = $this->input->ip_address();
 			//setup request headers
 			//foreach ($_SERVER as $key => $value)
 			foreach ($this->input->request_headers() as $key => $value)
@@ -50,10 +51,26 @@ class MY_Controller extends CI_Controller {
 				{
 					$requestvars .= ',';
 				}
-				$requestvars .= '"' . $key . '"="' . $value . '"';
+				$requestvars .= $key . '=' . $value ;
 			}
 			$requestvars .= ']';
 			$this->syslog_msg['Request.vars'] = $requestvars;
+			//session data
+			if($this->config->item('syslog_session_data') === true)
+			{
+				$this->load->library('session');
+				$requestsession = '[';
+				foreach($this->session->all_userdata() as $key => $value)
+				{
+					if( $requestsession != '[')
+					{
+						$requestsession .= ',';
+					}
+					$requestsession .= $key . '=' . $value ;
+				}
+				$requestsession .= ']';
+				$this->syslog_msg['Request.session'] = $requestsession;
+			}
 			//setup request body
 			$requestbody = '[';
 			foreach($_POST as $key => $value)
@@ -62,7 +79,7 @@ class MY_Controller extends CI_Controller {
 				{
 					$requestbody .= ',';
 				}
-				$requestbody .= '"' . $key . '"="' . $value . '"';
+				$requestbody .=  $key . '=' . $value ;
 			}
 			$requestbody .= ']';
 			$this->syslog_msg['Request.body'] = $requestbody;
@@ -84,16 +101,6 @@ class MY_Controller extends CI_Controller {
 		}
 		syslog(LOG_INFO,$log_msg);
 		closelog();
-	}
-
-
-	function __destruct()
-	{
-		if($this->syslog_enabled)
-		{
-			//create message
-			$this->_create_syslog_msg();
-		}
 	}
 }
 ?>

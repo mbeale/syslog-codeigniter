@@ -13,4 +13,5 @@
 
 $config['syslog_enabled']	= true;
 $config['syslog_cookies']	= false;
+$config['syslog_session_data']	= false;
 ?>
