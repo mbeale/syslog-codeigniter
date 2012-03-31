@@ -93,8 +93,7 @@ class MY_Controller extends CI_Controller {
 	
 	private function _create_syslog_msg()
 	{
-		$this->config->load('syslog');
-		openlog($this->config->item('syslog_appname'), LOG_CONS | LOG_NDELAY | LOG_PID, LOG_USER | LOG_PERROR);
+		openlog('php', LOG_CONS | LOG_NDELAY | LOG_PID, LOG_USER | LOG_PERROR);
 		$log_msg = '';
 		foreach($this->syslog_msg as $key => $value)
 		{
